@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Algorithm Analytics</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 25px; border: 1px solid #334155; }
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .case-best { background: #064e3b; color: #6ee7b7; }
+        .case-avg { background: #78350f; color: #fcd34d; }
+        .case-worst { background: #7f1d1d; color: #fca5a5; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; padding: 15px; border-bottom: 1px solid #334155; }
+        td { padding: 15px; border-bottom: 1px solid #334155; }
+        
+        .timer { font-family: monospace; color: #38bdf8; font-weight: bold; }
+        .complexity { color: #f472b6; font-style: italic; }
+        .output { color: #64748b; font-size: 0.8rem; max-width: 200px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Sorting Analytics Dashboard</h2>
+        <span class="badge case-{{ case }}">Input State: {{ case|upper }}</span>
+    </div>
+    
+    <p style="color:#94a3b8;">Original Array: {{ original }}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Algorithm</th>
+                <th>Actual Execution Time</th>
+                <th>Theoretical Complexity ({{ case }})</th>
+                <th>Final Sorted Output</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in results %}
+            <tr>
+                <td><strong>{{ r.name }}</strong></td>
+                <td class="timer">{{ r.time }} seconds</td>
+                <td class="complexity">{{ r.complexity }}</td>
+                <td><div class="output">{{ r.output }}</div></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <br>
+    <a href="/" style="color:#38bdf8; text-decoration:none;">← Reset Comparison</a>
+</div>
+
+</body>
+</html>
