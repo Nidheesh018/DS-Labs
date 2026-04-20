@@ -6,7 +6,7 @@ import heapq
 sys.setrecursionlimit(2000)
 app = Flask(__name__)
 
-# --- 10 SORTING ALGORITHMS ---
+
 def bubble_sort(arr):
     a = arr.copy()
     n = len(a)
@@ -97,7 +97,7 @@ def bucket_sort(arr):
     for b in bkts: res.extend(sorted(b))
     return res
 
-# --- 2 SEARCHING ALGORITHMS ---
+
 def linear_search(arr, target):
     for i, x in enumerate(arr):
         if x == target: return f"Found {target} at Index {i}"
