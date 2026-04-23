@@ -160,3 +160,6 @@ def compare():
 
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
+
+
+# this is a just made version this will be enhanced further and will be done 
