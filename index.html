@@ -2,111 +2,582 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>DS-Labs | Algorithm Workbench</title>
+    <title>Academic Timetable Scheduler</title>
     <style>
-        :root { --accent: #00d2ff; --bg: #0b1120; --card: #1e293b; --text: #f8fafc; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 50px; margin: 0; }
-        
-        .workbench { background: var(--card); padding: 35px; border-radius: 20px; width: 700px; border: 1px solid #334155; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .project-title { font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .project-title span { color: #94a3b8; font-weight: 300; }
-
-        /* Navigation Tabs */
-        .tab-nav { display: flex; gap: 10px; margin-bottom: 25px; background: #0f172a; padding: 5px; border-radius: 12px; }
-        .tab-btn { 
-            flex: 1; padding: 12px; cursor: pointer; border: none; background: none; 
-            color: #94a3b8; font-weight: 600; border-radius: 8px; transition: 0.2s;
-        }
-        .tab-btn.active { background: var(--accent); color: #0b1120; }
-        
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: slideUp 0.4s ease; }
-
-        /* Inputs */
-        .input-group { margin-bottom: 20px; }
-        label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 8px; }
-        input[type="text"], input[type="number"] { 
-            width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #334155; 
-            background: #0f172a; color: white; box-sizing: border-box; font-size: 15px;
+        :root {
+            --primary: #0f2c59;
+            --primary-light: #1e4b8a;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
         }
 
-        .algo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .algo-item { 
-            background: #1e293b; padding: 12px; border-radius: 8px; display: flex; 
-            align-items: center; gap: 12px; border: 1px solid #334155; cursor: pointer; transition: 0.2s;
-        }
-        .algo-item:hover { border-color: var(--accent); }
-        
-        .analyze-btn { 
-            width: 100%; padding: 18px; background: var(--accent); border: none; 
-            border-radius: 12px; font-weight: 800; cursor: pointer; color: #0b1120; 
-            margin-top: 30px; text-transform: uppercase; letter-spacing: 2px;
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            margin: 0; 
+            padding: 40px 20px; 
+            background-color: var(--bg-main); 
+            color: var(--text-main);
+            line-height: 1.5;
         }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .wrapper { 
+            max-width: 1300px; 
+            margin: 0 auto; 
+            background: var(--bg-card); 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(15, 44, 89, 0.05); 
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 { 
+            color: var(--primary); 
+            margin: 0 0 10px 0; 
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .step-box { 
+            background: #fdfdfd; 
+            border: 1px solid var(--border-color); 
+            padding: 30px; 
+            border-radius: 12px; 
+            margin-bottom: 30px; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+        }
+
+        .step-box h3 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.3rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-row { 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 12px; 
+            align-items: center; 
+        }
+
+        label { 
+            font-weight: 600; 
+            color: var(--text-main);
+        }
+
+        input { 
+            padding: 10px 16px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(30, 75, 138, 0.15);
+        }
+
+        input[type="number"] { width: 90px; text-align: center; }
+
+        button { 
+            padding: 10px 24px; 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            font-size: 14px;
+        }
+
+        button:hover { 
+            background-color: var(--primary-light); 
+            transform: translateY(-1px);
+        }
+
+        .class-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .class-card { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            padding: 24px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .class-card h4 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 1.15rem;
+        }
+
+        .live-counter-badge {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid #bfdbfe;
+            transition: all 0.2s ease;
+        }
+
+        /* Timetable Matrix Styling */
+        table { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0;
+            margin-top: 20px; 
+            margin-bottom: 40px; 
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+
+        th, td { 
+            border: 1px solid #cbd5e1; 
+            padding: 12px 8px; 
+            text-align: center; 
+            font-size: 13px; 
+        }
+
+        th { 
+            background-color: #1e293b; 
+            color: white; 
+            font-weight: 600; 
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+            border: 1px solid #334155;
+        }
+
+        .day-col { 
+            background-color: #f1f5f9; 
+            font-weight: bold; 
+            width: 120px;
+            color: #1e293b;
+        }
+
+        .break-cell { 
+            background-color: #e2e8f0; 
+            font-weight: 800; 
+            color: #475569; 
+            font-size: 11px; 
+            width: 30px; 
+            letter-spacing: 3px;
+            text-align: center;
+        }
+
+        .slot-container {
+            padding: 6px;
+            border-radius: 6px;
+            min-height: 42px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            transition: transform 0.2s;
+            color: #1e293b;
+        }
+
+        .slot-container:hover {
+            transform: scale(1.04);
+        }
+
+        .course-title { 
+            font-weight: 700; 
+            font-size: 14px;
+            letter-spacing: 0.02em;
+        }
+
+        .teacher-title { 
+            font-size: 11px; 
+            opacity: 0.85;
+            margin-top: 3px; 
+            font-weight: 500;
+        }
+
+        .free-period {
+            background-color: #f8fafc !important;
+            color: #94a3b8;
+            box-shadow: none;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .summary-dashboard {
+            background: linear-gradient(135deg, #0f2c59 0%, #1e4b8a 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            text-align: center;
+        }
+
+        .metrics-card h3 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #34d399;
+        }
+
+        .metrics-card p {
+            margin: 5px 0 0 0;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.9;
+        }
+
+        .error-banner { 
+            background-color: #fef2f2; 
+            border: 1px solid #fca5a5; 
+            color: #991b1b; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            text-align: center; 
+            margin-top: 20px; 
+        }
+
+        .export-container {
+            text-align: center;
+            margin: 30px 0;
+            display: none;
+        }
+
+        .btn-export {
+            background-color: #10b981;
+            font-size: 16px;
+            padding: 14px 40px;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-export:hover {
+            background-color: #059669;
+        }
     </style>
 </head>
 <body>
-    <div class="workbench">
-        <div class="project-title">DS-Labs <span>| Workbench</span></div>
-        
-        <form method="POST" action="/compare">
-            <div class="input-group">
-                <label>Dataset (Numbers separated by commas)</label>
-                <input type="text" name="array" value="23, 1, 45, 12, 7, 33, 19" required>
-            </div>
 
-            <div class="tab-nav">
-                <button type="button" class="tab-btn active" onclick="switchTab(event, 'sort-section')">SORTING</button>
-                <button type="button" class="tab-btn" onclick="switchTab(event, 'search-section')">SEARCHING</button>
-            </div>
-
-            <!-- SORTING CONTENT -->
-            <div id="sort-section" class="tab-content active">
-                <label>Select Sorting Engines</label>
-                <div class="algo-grid">
-                    {% for a in ["bubble", "selection", "insertion", "merge", "quick", "heap", "shell", "counting", "radix", "bucket"] %}
-                    <label class="algo-item">
-                        <input type="checkbox" name="algo" value="{{a}}"> {{a|capitalize}}
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- SEARCHING CONTENT -->
-            <div id="search-section" class="tab-content">
-                <label>Select Search Method</label>
-                <div class="algo-grid" style="margin-bottom: 20px;">
-                    <label class="algo-item"><input type="checkbox" name="algo" value="linear"> Linear Search</label>
-                    <label class="algo-item"><input type="checkbox" name="algo" value="binary"> Binary Search</label>
-                </div>
-                <div class="input-group">
-                    <label>Target Value</label>
-                    <input type="number" name="target" placeholder="Enter value to locate">
-                </div>
-            </div>
-
-            <button type="submit" class="analyze-btn">Initialize Analysis</button>
-        </form>
+<div class="wrapper">
+    <div class="header-section">
+        <h1>College Timetable Matrix Engine</h1>
+        <p class="subtitle">Collision-Free Faculty Scheduling with Intelligent Color-Coding</p>
     </div>
 
-    <script>
-        function switchTab(evt, sectionId) {
-            const contents = document.querySelectorAll('.tab-content');
-            const buttons = document.querySelectorAll('.tab-btn');
-            
-            contents.forEach(c => c.classList.remove('active'));
-            buttons.forEach(b => b.classList.remove('active'));
-            
-            document.getElementById(sectionId).classList.add('active');
-            evt.currentTarget.classList.add('active');
+    <div id="step-1" class="step-box">
+        <h3>Step 1: College Scale Registration</h3>
+        <div class="form-row">
+            <label>How many total classes / student sections exist in the college?</label>
+            <input type="number" id="input-num-classes" min="1" max="10" value="2">
+            <button onclick="generateConfigForms()">Initialize Class Slots</button>
+        </div>
+    </div>
+
+    <div id="step-2" class="step-box" style="display: none;">
+        <h3>Step 2: Course & Faculty Assignment Profiles</h3>
+        
+        <div id="classes-container" class="class-grid-layout"></div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button style="font-size: 16px; padding: 14px 40px; background-color: #10b981;" onclick="processAndCompute()">Compute Master Timetable</button>
+        </div>
+    </div>
+
+    <div id="export-zone" class="export-container">
+        <button class="btn-export" onclick="downloadForNumbers()">Download the time table</button>
+    </div>
+
+    <div id="error-display"></div>
+    <div id="matrix-display"></div>
+    <div id="summary-display"></div>
+</div>
+
+<script>
+let subjectColors = {};
+let currentTimetableState = null; // Global structure caching computed variables
+
+const colorPalette = [
+    '#e0f2fe', '#dcfce7', '#fef9c3', '#f3e8ff', '#ffe4e6', 
+    '#ccfbf1', '#ffedd5', '#e0e7ff', '#f5f5f4', '#f0fdf4'
+];
+let colorIndex = 0;
+
+function getSubjectColor(subjectName) {
+    let cleanName = subjectName.trim().toUpperCase();
+    if (!cleanName || cleanName === "FREE / LIB" || cleanName === "LIB/FREE") return "";
+    
+    if (!subjectColors[cleanName]) {
+        subjectColors[cleanName] = colorPalette[colorIndex % colorPalette.length];
+        colorIndex++;
+    }
+    return subjectColors[cleanName];
+}
+
+function updateLiveCounter(cardElement) {
+    let total = 0;
+    const inputs = cardElement.querySelectorAll('.inp-count');
+    inputs.forEach(input => {
+        const val = parseInt(input.value);
+        if(!isNaN(val)) {
+            total += val;
         }
-    </script>
+    });
+    
+    const badge = cardElement.querySelector('.live-counter-value');
+    badge.innerText = total;
+
+    if (total > 48) {
+        badge.parentElement.style.backgroundColor = '#fef2f2';
+        badge.parentElement.style.color = '#991b1b';
+        badge.parentElement.style.borderColor = '#fca5a5';
+    } else {
+        badge.parentElement.style.backgroundColor = '#eff6ff';
+        badge.parentElement.style.color = '#1d4ed8';
+        badge.parentElement.style.borderColor = '#bfdbfe';
+    }
+}
+
+function generateConfigForms() {
+    const numClasses = parseInt(document.getElementById('input-num-classes').value);
+    if(isNaN(numClasses) || numClasses < 1) return;
+
+    let containerHtml = "";
+    
+    for(let i = 1; i <= numClasses; i++) {
+        containerHtml += `
+        <div class="class-card" data-class-label="Class ${i}">
+            <div class="card-header-flex">
+                <h4>Configuration Profiles for Class ${i}</h4>
+                <div class="live-counter-badge">Allocated: <span class="live-counter-value">18</span> / 48 periods max</div>
+            </div>
+            <div class="form-row" style="font-weight: 600; color: var(--text-muted); font-size: 13px;">
+                <div style="width: 130px;">Subject Name</div>
+                <div style="width: 130px;">Faculty Name</div>
+                <div style="width: 80px;">Periods / Wk</div>
+            </div>
+            <div class="course-input-rows">
+                <div class="form-row">
+                    <input type="text" class="inp-name" value="DSA" style="width: 110px;">
+                    <input type="text" class="inp-teacher" value="Dr. Rama" style="width: 110px;">
+                    <input type="number" class="inp-count" value="5" min="1" oninput="updateLiveCounter(this.closest('.class-card'))">
+                </div>
+                <div class="form-row">
+                    <input type="text" class="inp-name" value="AI" style="width: 110px;">
+                    <input type="text" class="inp-teacher" value="Dr. Harsha" style="width: 110px;">
+                    <input type="number" class="inp-count" value="4" min="1" oninput="updateLiveCounter(this.closest('.class-card'))">
+                </div>
+                <div class="form-row">
+                    <input type="text" class="inp-name" value="FED" style="width: 110px;">
+                    <input type="text" class="inp-teacher" value="Ms. Prasanna" style="width: 110px;">
+                    <input type="number" class="inp-count" value="5" min="1" oninput="updateLiveCounter(this.closest('.class-card'))">
+                </div>
+                <div class="form-row">
+                    <input type="text" class="inp-name" value="MATHS" style="width: 110px;">
+                    <input type="text" class="inp-teacher" value="Dr. Srinivasulu" style="width: 110px;">
+                    <input type="number" class="inp-count" value="4" min="1" oninput="updateLiveCounter(this.closest('.class-card'))">
+                </div>
+            </div>
+            <button type="button" style="background:#64748b; font-size:11px; padding:6px 12px; margin-top:10px;" onclick="addExtraRow(this)">+ Add Subject</button>
+        </div>`;
+    }
+
+    document.getElementById('classes-container').innerHTML = containerHtml;
+    document.getElementById('step-2').style.display = 'block';
+    document.getElementById('matrix-display').innerHTML = "";
+    document.getElementById('error-display').innerHTML = "";
+    document.getElementById('summary-display').innerHTML = "";
+    document.getElementById('export-zone').style.display = "none";
+    currentTimetableState = null;
+
+    document.querySelectorAll('.class-card').forEach(card => updateLiveCounter(card));
+}
+
+function addExtraRow(button) {
+    const targetDiv = button.previousElementSibling;
+    const card = button.closest('.class-card');
+    const rowHtml = `
+    <div class="form-row">
+        <input type="text" class="inp-name" placeholder="e.g. OS" style="width: 110px;">
+        <input type="text" class="inp-teacher" placeholder="e.g. Prof. Kumar" style="width: 110px;">
+        <input type="number" class="inp-count" value="3" min="1" oninput="updateLiveCounter(this.closest('.class-card'))">
+    </div>`;
+    targetDiv.insertAdjacentHTML('beforeend', rowHtml);
+    updateLiveCounter(card);
+}
+
+async function processAndCompute() {
+    const numClasses = parseInt(document.getElementById('input-num-classes').value);
+    const cards = document.querySelectorAll('.class-card');
+    
+    let courseData = {};
+    let totalAssignedPeriods = 0;
+    
+    cards.forEach(card => {
+        const classLabel = card.getAttribute('data-class-label');
+        courseData[classLabel] = [];
+        
+        card.querySelectorAll('.course-input-rows .form-row').forEach(row => {
+            const name = row.querySelector('.inp-name').value;
+            const teacher = row.querySelector('.inp-teacher').value;
+            const count = row.querySelector('.inp-count').value;
+            
+            if(name.trim() && teacher.trim() && count) {
+                courseData[classLabel].push({ name, teacher, count });
+                totalAssignedPeriods += parseInt(count);
+            }
+        });
+    });
+
+    const response = await fetch('/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ num_classes: numClasses, courseData: courseData })
+    });
+
+    const data = await response.json();
+    const matrixZone = document.getElementById('matrix-display');
+    const errorZone = document.getElementById('error-display');
+    const summaryZone = document.getElementById('summary-display');
+    const exportZone = document.getElementById('export-zone');
+    
+    matrixZone.innerHTML = "";
+    errorZone.innerHTML = "";
+    summaryZone.innerHTML = "";
+    exportZone.style.display = "none";
+    currentTimetableState = null;
+
+    if(data.status === 'error') {
+        errorZone.innerHTML = `<div class="error-banner">${data.message}</div>`;
+        return;
+    }
+
+    // Cache valid layout responses for spreadsheet extraction pipeline
+    currentTimetableState = data;
+    exportZone.style.display = "block";
+
+    data.sections.forEach(sec => {
+        let tableHtml = `<h2 style="margin-top:40px; color: var(--primary); border-left: 6px solid var(--primary); padding-left: 12px; font-size:1.5rem;">Master Grid Matrix: ${sec}</h2>`;
+        tableHtml += `<table>
+            <thead>
+                <tr>
+                    <th>DAY</th>
+                    <th>Hour 1</th><th>Hour 2</th><th>Hour 3</th>
+                    <th class="break-cell">BREAK</th>
+                    <th>Hour 4</th><th>Hour 5</th>
+                    <th class="break-cell">LUNCH</th>
+                    <th>Hour 6</th><th>Hour 7</th><th>Hour 8</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        data.days.forEach(day => {
+            tableHtml += `<tr><td class="day-col">${day}</td>`;
+            
+            for(let h = 0; h < 8; h++) {
+                if(h === 3) tableHtml += `<td class="break-cell">B<br>R<br>K</td>`;
+                if(h === 5) tableHtml += `<td class="break-cell">L<br>N<br>C<br>H</td>`;
+                
+                const slot = data.timetable[day][h][sec];
+                const isFree = (slot.name === "FREE / LIB");
+                const colorBg = isFree ? "" : getSubjectColor(slot.name);
+                const extraClass = isFree ? "free-period" : "";
+
+                tableHtml += `<td>
+                    <div class="slot-container ${extraClass}" style="background-color: ${colorBg}">
+                        <span class="course-title">${slot.name}</span>
+                        <span class="teacher-title">${slot.teacher}</span>
+                    </div>
+                </td>`;
+            }
+            tableHtml += `</tr>`;
+        });
+
+        tableHtml += `</tbody></table>`;
+        matrixZone.innerHTML += tableHtml;
+    });
+
+    summaryZone.innerHTML = `
+        <div class="summary-dashboard">
+            <div class="metrics-card">
+                <h3>${numClasses}</h3>
+                <p>Total Campus Classes Managed</p>
+            </div>
+            <div class="metrics-card" style="border-left: 1px solid rgba(255,255,255,0.2); border-right: 1px solid rgba(255,255,255,0.2); padding: 0 40px;">
+                <h3>${totalAssignedPeriods}</h3>
+                <p>Target Subject Core Periods Met</p>
+            </div>
+            <div class="metrics-card">
+                <h3>0 Clashes</h3>
+                <p>Faculty Overlaps Checked</p>
+            </div>
+        </div>
+    `;
+}
+
+async function downloadForNumbers() {
+    if (!currentTimetableState) {
+        alert("Please generate a valid timetable matrix grid first!");
+        return;
+    }
+
+    try {
+        const response = await fetch('/export_numbers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentTimetableState)
+        });
+
+        if (!response.ok) throw new Error("Failed to compile spreadsheet file data stream.");
+
+        const blob = await response.blob();
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = "College_Timetable_Export.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (err) {
+        alert("Error exporting: " + err.message);
+    }
+}
+</script>
 </body>
 </html>
-
-
- <!-- SEARCHING CONTENT -->
-  <!-- SEARCHING CONTENT -->
-   <!-- SEARCHING CONTENT -->
-    <!-- SEARCHING CONTENT -->
