@@ -1,166 +1,160 @@
-from flask import Flask, render_template, request
-import time
-import sys
-import heapq
+import io
+import random
+from flask import Flask, render_template, request, jsonify, send_file
 
-sys.setrecursionlimit(2000)
 app = Flask(__name__)
 
+# This header configuration stops browsers from throwing access/CORS errors locally
+@app.after_request
+def add_header(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+    return response
 
-def bubble_sort(arr):
-    a = arr.copy()
-    n = len(a)
-    for i in range(n):
-        for j in range(0, n-i-1):
-            if a[j] > a[j+1]: a[j], a[j+1] = a[j+1], a[j]
-    return a
+DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
+HOURS_PER_DAY = 8
 
-def selection_sort(arr):
-    a = arr.copy()
-    for i in range(len(a)):
-        m = i
-        for j in range(i+1, len(a)):
-            if a[j] < a[m]: m = j
-        a[i], a[m] = a[m], a[i]
-    return a
+def is_safe(day, hour, section, teacher, timetable):
+    # Check if this specific teacher is already busy in ANY other class during this exact day and hour
+    for sec in timetable[day][hour]:
+        if timetable[day][hour][sec] and timetable[day][hour][sec]['teacher'] == teacher:
+            return False
+    return True
 
-def insertion_sort(arr):
-    a = arr.copy()
-    for i in range(1, len(a)):
-        k, j = a[i], i-1
-        while j >= 0 and a[j] > k:
-            a[j+1] = a[j]; j -= 1
-        a[j+1] = k
-    return a
-
-def merge_sort(arr):
-    if len(arr) <= 1: return arr
-    m = len(arr) // 2
-    l, r = merge_sort(arr[:m]), merge_sort(arr[m:])
-    res, i, j = [], 0, 0
-    while i < len(l) and j < len(r):
-        if l[i] < r[j]: res.append(l[i]); i += 1
-        else: res.append(r[j]); j += 1
-    return res + l[i:] + r[j:]
-
-def quick_sort(arr):
-    if len(arr) <= 1: return arr
-    p = arr[len(arr)//2]
-    return quick_sort([x for x in arr if x < p]) + [x for x in arr if x == p] + quick_sort([x for x in arr if x > p])
-
-def heap_sort(arr):
-    a = arr.copy()
-    heapq.heapify(a)
-    return [heapq.heappop(a) for _ in range(len(a))]
-
-def shell_sort(arr):
-    a, n = arr.copy(), len(arr)
-    g = n // 2
-    while g > 0:
-        for i in range(g, n):
-            t, j = a[i], i
-            while j >= g and a[j-g] > t:
-                a[j] = a[j-g]; j -= g
-            a[j] = t
-        g //= 2
-    return a
-
-def counting_sort(arr):
-    if not arr: return []
-    mx, mn = max(arr), min(arr)
-    cnt = [0] * (mx - mn + 1)
-    for x in arr: cnt[x-mn] += 1
-    res = []
-    for i, c in enumerate(cnt): res.extend([i+mn] * c)
-    return res
-
-def radix_sort(arr):
-    if not arr: return []
-    a, mx = arr.copy(), max(arr)
-    exp = 1
-    while mx // exp > 0:
-        buckets = [[] for _ in range(10)]
-        for x in a: buckets[(x // exp) % 10].append(x)
-        a = [x for b in buckets for x in b]
-        exp *= 10
-    return a
-
-def bucket_sort(arr):
-    if not arr: return []
-    mx, mn = max(arr), min(arr)
-    if mx == mn: return arr
-    bkts = [[] for _ in range(len(arr))]
-    for x in arr:
-        idx = int((x-mn)/(mx-mn) * (len(arr)-1))
-        bkts[idx].append(x)
-    res = []
-    for b in bkts: res.extend(sorted(b))
-    return res
-
-
-def linear_search(arr, target):
-    for i, x in enumerate(arr):
-        if x == target: return f"Found {target} at Index {i}"
-    return f"{target} Not Found"
-
-def binary_search(arr, target):
-    a = sorted(arr)
-    l, r = 0, len(a)-1
-    while l <= r:
-        m = (l+r)//2
-        if a[m] == target: return f"Found {target} at Index {m} (Sorted)"
-        if a[m] < target: l = m+1
-        else: r = m-1
-    return f"{target} Not Found"
-
-algorithms = {
-    "bubble": {"f": bubble_sort, "b":"O(n)", "a":"O(n²)", "w":"O(n²)"},
-    "selection": {"f": selection_sort, "b":"O(n²)", "a":"O(n²)", "w":"O(n²)"},
-    "insertion": {"f": insertion_sort, "b":"O(n)", "a":"O(n²)", "w":"O(n²)"},
-    "merge": {"f": merge_sort, "b":"O(n log n)", "a":"O(n log n)", "w":"O(n log n)"},
-    "quick": {"f": quick_sort, "b":"O(n log n)", "a":"O(n log n)", "w":"O(n²)"},
-    "heap": {"f": heap_sort, "b":"O(n log n)", "a":"O(n log n)", "w":"O(n log n)"},
-    "shell": {"f": shell_sort, "b":"O(n log n)", "a":"O(n^1.5)", "w":"O(n²)"},
-    "counting": {"f": counting_sort, "b":"O(n+k)", "a":"O(n+k)", "w":"O(n+k)"},
-    "radix": {"f": radix_sort, "b":"O(nk)", "a":"O(nk)", "w":"O(nk)"},
-    "bucket": {"f": bucket_sort, "b":"O(n+k)", "a":"O(n+k)", "w":"O(n²)"},
-    "linear": {"f": linear_search, "b":"O(1)", "a":"O(n)", "w":"O(n)"},
-    "binary": {"f": binary_search, "b":"O(1)", "a":"O(log n)", "w":"O(log n)"}
-}
-
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-@app.route("/compare", methods=["POST"])
-def compare():
-    selected = request.form.getlist("algo")
-    raw_arr = request.form.get("array", "")
-    target = request.form.get("target", "")
-    arr = [int(x.strip()) for x in raw_arr.split(",") if x.strip()]
+def solve_timetable(day_idx, hour_idx, sec_idx, sections, course_requirements, timetable):
+    # Base Case 1: If we finished all sections for this hour, move to the next hour
+    if sec_idx == len(sections):
+        return solve_timetable(day_idx, hour_idx + 1, 0, sections, course_requirements, timetable)
     
-    case_type = "avg"
-    if arr == sorted(arr): case_type = "best"
-    elif arr == sorted(arr, reverse=True): case_type = "worst"
-    
-    results = []
-    for algo_id in selected:
-        info = algorithms[algo_id]
-        start = time.perf_counter()
-        output = info["f"](arr, int(target) if target else 0) if algo_id in ["linear", "binary"] else info["f"](arr)
+    # Base Case 2: If we finished all 8 hours of the day, move to the next day
+    if hour_idx == HOURS_PER_DAY:
+        return solve_timetable(day_idx + 1, 0, 0, sections, course_requirements, timetable)
         
-        results.append({
-            "name": algo_id.upper(),
-            "time": format(time.perf_counter() - start, '.8f'),
-            "output": output,
-            "best": info["b"], "avg": info["a"], "worst": info["w"],
-            "current_case": case_type
-        })
-    return render_template("result.html", results=results, original=arr, case=case_type)
+    # Base Case 3: If we finished all days, check if all course targets reached 0
+    if day_idx == len(DAYS):
+        for sec in sections:
+            for course in course_requirements[sec]:
+                if course['remaining'] > 0:
+                    return False
+        return True
 
-if __name__ == "__main__":
-    app.run(debug=True, port=8080)
+    day = DAYS[day_idx]
+    sec = sections[sec_idx]
+    courses = list(course_requirements.get(sec, []))
+    random.shuffle(courses)
 
+    for course in courses:
+        if course['remaining'] > 0:
+            if is_safe(day, hour_idx, sec, course['teacher'], timetable):
+                # Allocation step
+                timetable[day][hour_idx][sec] = {
+                    "name": course['name'],
+                    "teacher": course['teacher']
+                }
+                course['remaining'] -= 1
 
-# this is a just made version this will be enhanced further and will be done 
-# this is the improvement for trees 
+                # Move to next section
+                if solve_timetable(day_idx, hour_idx, sec_idx + 1, sections, course_requirements, timetable):
+                    return True
+                
+                # Backtrack step
+                course['remaining'] += 1
+                timetable[day][hour_idx][sec] = None
+
+    # Fallback option: Assign Free/Library period if this slot cannot host any pending course
+    timetable[day][hour_idx][sec] = {"name": "FREE / LIB", "teacher": "-"}
+    if solve_timetable(day_idx, hour_idx, sec_idx + 1, sections, course_requirements, timetable):
+        return True
+    timetable[day][hour_idx][sec] = None
+    return False
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# Explicitly handling POST and OPTIONS requests preventing browser fetch blockages
+@app.route('/generate', methods=['POST', 'OPTIONS'])
+def generate():
+    if request.method == 'OPTIONS':
+        return jsonify({"status": "ok"})
+        
+    data = request.json
+    num_classes = int(data.get('num_classes', 1))
+    raw_course_data = data.get('courseData', {})
+
+    sections = [f"Class {i}" for i in range(1, num_classes + 1)]
+    course_requirements = {}
+    for sec in sections:
+        course_requirements[sec] = []
+        user_courses = raw_course_data.get(sec, [])
+        for c in user_courses:
+            course_requirements[sec].append({
+                "name": c['name'].strip().upper(),
+                "teacher": c['teacher'].strip().upper(),
+                "remaining": int(c['count'])
+            })
+
+    # Initialize empty matrix: timetable[DAY][HOUR][SECTION]
+    timetable = {day: [ {sec: None for sec in sections} for _ in range(HOURS_PER_DAY) ] for day in DAYS}
+    success = solve_timetable(0, 0, 0, sections, course_requirements, timetable)
+    
+    if success:
+        return jsonify({"status": "success", "timetable": timetable, "days": DAYS, "sections": sections})
+    else:
+        return jsonify({"status": "error", "message": "Could not find a conflict-free match. Try reducing targeted periods or modifying staff assignments."})
+
+# Export directly into Apple Numbers compatible spreadsheet structures
+@app.route('/export_numbers', methods=['POST', 'OPTIONS'])
+def export_numbers():
+    if request.method == 'OPTIONS':
+        return jsonify({"status": "ok"})
+
+    data = request.json
+    timetable = data.get('timetable', {})
+    days = data.get('days', [])
+    sections = data.get('sections', [])
+    
+    # Create an in-memory string buffer for clean data population
+    output = io.StringIO()
+    
+    for sec in sections:
+        output.write(f"MASTER TIMETABLE MATRIX: {sec}\n")
+        output.write("DAY,Hour 1,Hour 2,Hour 3,BREAK,Hour 4,Hour 5,LUNCH,Hour 6,Hour 7,Hour 8\n")
+        
+        for day in days:
+            row_cells = [day]
+            # Mirroring the exact structure of the frontend layout matrix indices
+            for h in range(8):
+                slot = timetable.get(day, [])[h].get(sec) if timetable.get(day) else None
+                
+                # Format string output text accurately
+                if slot and slot['name'] != "FREE / LIB":
+                    cell_text = f"{slot['name']} ({slot['teacher']})"
+                else:
+                    cell_text = "FREE"
+                
+                row_cells.append(cell_text)
+                
+                # Append break intervals exactly inside column cells layout matching the frontend view
+                if h == 2:
+                    row_cells.append("BREAK")
+                elif h == 4:
+                    row_cells.append("LUNCH")
+                    
+            output.write(",".join(row_cells) + "\n")
+        output.write("\n\n") # Spacing structural breaks between individual class blocks
+        
+    buffer = io.BytesIO()
+    buffer.write(output.getvalue().encode('utf-8'))
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="College_Timetable_Export.csv",
+        mimetype="text/csv"
+    )
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
